@@ -49,12 +49,14 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 		return err
 	}
 
-	samlSP, err := samlsp.New(samlsp.Options{
+	samlSP, err := NewSaml(samlsp.Options{
 		URL:         *rootURL,
 		Key:         keyPair.PrivateKey.(*rsa.PrivateKey),
 		Certificate: keyPair.Leaf,
 		IDPMetadata: idpMetadata,
-	})
+		EntityID:    m.SamlEntityID,
+		SignRequest: true,
+	}, m.SamlClaims)
 	if err != nil {
 		return err
 	}

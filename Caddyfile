@@ -1,5 +1,6 @@
 {
 	order saml_sso before header
+	debug
 }
 
 (enable_saml) {
@@ -8,6 +9,9 @@
 		saml_cert_file {$SAML_CERT_FILE}
 		saml_key_file {$SAML_KEY_FILE}
 		saml_root_url {$SAML_ROOT_URL}
+		saml_entity_id {$SAML_ENTITY_ID}
+		saml_claims {$SAML_CLAIMS}
+		saml_header_claims {$SAML_HEADER_CLAIMS}
 	}
 }
 
