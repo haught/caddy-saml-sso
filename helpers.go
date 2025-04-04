@@ -8,14 +8,14 @@ import (
 	"github.com/crewjam/saml/samlsp"
 )
 
-func (m *Middleware) extractAttributes(r *http.Request) (samlsp.Attributes, error) {
+func (m *Middleware) extractAttributes(r *http.Request) (Attributes, error) {
 	session, _ := m.SamlSP.Session.GetSession(r)
 	if session == nil {
 		return nil, nil
 	}
 
 	r = r.WithContext(samlsp.ContextWithSession(r.Context(), session))
-	jwtSessionClaims, ok := session.(samlsp.JWTSessionClaims)
+	jwtSessionClaims, ok := session.(SamlJWTSessionClaims)
 	if !ok {
 		return nil, fmt.Errorf("Unable to decode session into JWTSessionClaims")
 	}

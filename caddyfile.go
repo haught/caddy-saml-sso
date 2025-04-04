@@ -1,6 +1,8 @@
 package caddy_saml_sso
 
 import (
+	"strings"
+
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
@@ -38,6 +40,24 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Err("invalid saml_root_url")
 			}
 			m.SamlRootUrl = args[0]
+		case "saml_entity_id":
+			if len(args) == 1 {
+				m.SamlEntityID = args[0]
+			}
+		case "saml_claims":
+			if len(args) == 1 {
+				m.SamlClaims = strings.Split(args[0], ",")
+				for t := range m.SamlClaims {
+					m.SamlClaims[t] = strings.TrimSpace(m.SamlClaims[t])
+				}
+			}
+		case "saml_header_claims":
+			if len(args) == 1 {
+				m.SamlHeaderClaims = strings.Split(args[0], ",")
+				for t := range m.SamlHeaderClaims {
+					m.SamlHeaderClaims[t] = strings.TrimSpace(m.SamlHeaderClaims[t])
+				}
+			}
 		default:
 			//d.Err("Unknow cam parameter: " + parameter)
 			log("skipping: %s %v", parameter, args)
