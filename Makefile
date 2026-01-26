@@ -1,7 +1,7 @@
 HOST=$(shell hostname)
 MOD_NAME=caddy-saml-sso
 PRJ_NAME=$(MOD_NAME)
-BINS=caddy.arm64.osx caddy.amd64.linux caddy.amd64.windows
+BINS=caddy.arm64.osx caddy.linux caddy.amd64.windows
 IMAGE=github.com/haught/$(MOD_NAME)
 
 VERSION=$(shell cat version.go | tail -1| awk -F\" '{print $$2}')
@@ -23,8 +23,8 @@ build-all: $(BINS)
 caddy.arm64.osx: xcaddy
 	xcaddy build --with github.com/haught/$(MOD_NAME) --output $@
 
-caddy.amd64.linux:
-	GOARCH=amd64 GOOS=linux xcaddy build --with github.com/haught/$(MOD_NAME)=./ --output $@
+caddy.linux:
+	GOOS=linux xcaddy build --with github.com/haught/$(MOD_NAME)=./ --output $@
 
 caddy.amd64.windows:
 	GOARCH=amd64 GOOS=windows xcaddy build --with github.com/haught/$(MOD_NAME) --output $@
