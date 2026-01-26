@@ -2,7 +2,7 @@ HOST=$(shell hostname)
 MOD_NAME=caddy-saml-sso
 PRJ_NAME=$(MOD_NAME)
 BINS=caddy.arm64.osx caddy.amd64.linux caddy.amd64.windows
-IMAGE=github.com/ncstate-comtech/$(MOD_NAME)
+IMAGE=github.com/haught/$(MOD_NAME)
 
 VERSION=$(shell cat version.go | tail -1| awk -F\" '{print $$2}')
 
@@ -21,13 +21,13 @@ test-env:
 build-all: $(BINS)
 
 caddy.arm64.osx: xcaddy
-	xcaddy build --with github.com/ncstate-comtech/$(MOD_NAME) --output $@
+	xcaddy build --with github.com/haught/$(MOD_NAME) --output $@
 
 caddy.amd64.linux:
-	GOARCH=amd64 GOOS=linux xcaddy build --with github.com/ncstate-comtech/$(MOD_NAME)=./ --output $@
+	GOARCH=amd64 GOOS=linux xcaddy build --with github.com/haught/$(MOD_NAME)=./ --output $@
 
 caddy.amd64.windows:
-	GOARCH=amd64 GOOS=windows xcaddy build --with github.com/ncstate-comtech/$(MOD_NAME) --output $@
+	GOARCH=amd64 GOOS=windows xcaddy build --with github.com/haught/$(MOD_NAME) --output $@
 
 xcaddy:
 	go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest

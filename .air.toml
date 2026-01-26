@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = ["run", "--config", "./Caddyfile"]
   bin = "./caddy.amd64.linux"
-  cmd = "GOARCH=amd64 GOOS=linux xcaddy build --with github.com/ncstate-comtech/caddy-saml-sso=./ --output ./caddy.amd64.linux"
+  cmd = "GOARCH=amd64 GOOS=linux xcaddy build --with github.com/haught/caddy-saml-sso=./ --output ./caddy.amd64.linux"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "saml-app", "idp", "scripts", "md", ".git"]
   exclude_file = []

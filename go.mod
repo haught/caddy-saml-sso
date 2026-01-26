@@ -1,4 +1,4 @@
-module github.com/ncstate-comtech/caddy-saml-sso
+module github.com/haught/caddy-saml-sso
 
 go 1.25
 

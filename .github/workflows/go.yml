@@ -55,7 +55,7 @@ jobs:
 
       - name: Build
         run: |
-          xcaddy build master --output ${{ runner.temp }}/${{ matrix.name }} --with github.com/ncstate-comtech/caddy-saml-sso=./
+          xcaddy build master --output ${{ runner.temp }}/${{ matrix.name }} --with github.com/haught/caddy-saml-sso=./
           # smoking test
           echo ''
           echo '########'
