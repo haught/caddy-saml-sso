@@ -32,6 +32,22 @@ but it is now a parked domain. You'll have to find an alternative. Please reach 
 
 `make saml-cert` will create a directory with the cert and key necessary to sign xml documents.
 
+## Configuration Options
+
+| Directive | Required | Description |
+|-----------|----------|-------------|
+| `saml_idp_url` | Yes | URL to your SAML IdP metadata endpoint |
+| `saml_cert_file` | Yes | Path to your SP's X.509 certificate file |
+| `saml_key_file` | Yes | Path to your SP's private key file |
+| `saml_root_url` | Yes | Base URL of your service provider |
+| `saml_entity_id` | No | Custom Entity ID for the SP (defaults to root URL) |
+| `saml_userid_claim` | No | SAML attribute to use as the user identifier (sets `X-Remote-User` header) |
+| `saml_claims` | No | Comma-separated list of SAML claims to pass as Caddy variables |
+| `saml_cookie_name` | No | Session cookie name (default: `token`) |
+| `saml_cookie_samesite` | No | Cookie SameSite policy: `strict`, `lax`, or `none` (default: `lax`) |
+| `saml_remote_user_var` | No | Caddy variable name for the authenticated user (default: `REMOTE_USER`) |
+| `saml_var_prefix` | No | Prefix for SAML claim variables (default: `SAML_`) |
+
 ## Caddyfile example
 
 ```Caddy
@@ -42,10 +58,13 @@ but it is now a parked domain. You'll have to find an alternative. Please reach 
 
 (enable_saml) {
   saml_sso {
-    saml_idp_url   {$SAML_IDP_URL}
-    saml_cert_file {$SAML_CERT_FILE}
-    saml_key_file  {$SAML_KEY_FILE}
-    saml_root_url  {$SAML_ROOT_URL}
+    saml_idp_url         {$SAML_IDP_URL}
+    saml_cert_file       {$SAML_CERT_FILE}
+    saml_key_file        {$SAML_KEY_FILE}
+    saml_root_url        {$SAML_ROOT_URL}
+    saml_userid_claim    email
+    saml_claims          email,displayName,groups
+    saml_cookie_samesite lax
   }
 }
 

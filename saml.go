@@ -3,6 +3,7 @@ package caddy_saml_sso
 import (
 	"crypto/rsa"
 	"fmt"
+	"net/http"
 
 	"github.com/golang-jwt/jwt/v4"
 
@@ -34,13 +35,18 @@ func SamlSessionProvider(opts samlsp.Options, claims []string) samlsp.CookieSess
 	if cookieName == "" {
 		cookieName = defaultSessionCookieName
 	}
+	// Default to SameSite=Lax if not explicitly configured to prevent CSRF attacks
+	sameSite := opts.CookieSameSite
+	if sameSite == 0 {
+		sameSite = http.SameSiteLaxMode
+	}
 	return samlsp.CookieSessionProvider{
 		Name:     cookieName,
 		Domain:   opts.URL.Host,
 		MaxAge:   defaultSessionMaxAge,
 		HTTPOnly: true,
 		Secure:   opts.URL.Scheme == "https",
-		SameSite: opts.CookieSameSite,
+		SameSite: sameSite,
 		Codec:    SamlSessionCodec(opts, claims),
 	}
 }

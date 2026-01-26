@@ -12,18 +12,19 @@ import (
 
 // Holds all the module's data
 type Middleware struct {
-	SamlIdpUrl        string   `json:"saml_idp_url,omitempty"`
-	SamlCertFile      string   `json:"saml_cert_file,omitempty"`
-	SamlKeyFile       string   `json:"saml_cert_key,omitempty"`
-	SamlRootUrl       string   `json:"saml_root_url,omitempty"`
-	SamlEntityID      string   `json:"saml_entity_id,omitempty"`
-	SamlUserIdClaim   string   `json:"saml_userid_claim,omitempty"`
-	SamlClaims        []string `json:"saml_claims,omitempty"`
-	SamlCookieName    string   `json:"saml_cookie_name,omitempty"`
-	SamlRemoteUserVar string   `json:"saml_remote_user_var,omitempty"`
-	SamlVarPrefix     string   `json:"saml_var_prefix,omitempty"`
-	SamlSP            *samlsp.Middleware
-	SamlHandler       http.Handler
+	SamlIdpUrl          string   `json:"saml_idp_url,omitempty"`
+	SamlCertFile        string   `json:"saml_cert_file,omitempty"`
+	SamlKeyFile         string   `json:"saml_cert_key,omitempty"`
+	SamlRootUrl         string   `json:"saml_root_url,omitempty"`
+	SamlEntityID        string   `json:"saml_entity_id,omitempty"`
+	SamlUserIdClaim     string   `json:"saml_userid_claim,omitempty"`
+	SamlClaims          []string `json:"saml_claims,omitempty"`
+	SamlCookieName      string   `json:"saml_cookie_name,omitempty"`
+	SamlCookieSameSite  string   `json:"saml_cookie_samesite,omitempty"`
+	SamlRemoteUserVar   string   `json:"saml_remote_user_var,omitempty"`
+	SamlVarPrefix       string   `json:"saml_var_prefix,omitempty"`
+	SamlSP              *samlsp.Middleware
+	SamlHandler         http.Handler
 }
 
 func init() {
@@ -60,13 +61,17 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 			for k, v := range attributes {
 				// If we have a user id claim, we need to add it to the request header and caddy variable
 				if len(m.SamlUserIdClaim) > 0 && k == m.SamlUserIdClaim {
-					logDebug("setting saml_ssoremote user header to %s", v[0])
-					r.Header.Set("X-Remote-User", v[0])
-					logDebug("setting saml_ssovariable for %s to '%s'", m.SamlRemoteUserVar, v[0])
-					caddyhttp.SetVar(r.Context(), m.SamlRemoteUserVar, v[0])
+					// Sanitize value to prevent HTTP header injection
+					sanitizedValue := sanitizeHeaderValue(v[0])
+					logDebug("setting saml_ssoremote user header to %s", sanitizedValue)
+					r.Header.Set("X-Remote-User", sanitizedValue)
+					logDebug("setting saml_ssovariable for %s to '%s'", m.SamlRemoteUserVar, sanitizedValue)
+					caddyhttp.SetVar(r.Context(), m.SamlRemoteUserVar, sanitizedValue)
 				} else if slices.Contains(m.SamlClaims, k) {
-					logDebug("setting saml_ssovariable for %s to '%s'", m.SamlVarPrefix+strings.ToUpper(k), strings.Join(v, ","))
-					caddyhttp.SetVar(r.Context(), m.SamlVarPrefix+strings.ToUpper(k), strings.Join(v, ","))
+					// Sanitize joined values to prevent HTTP header injection
+					sanitizedValue := sanitizeHeaderValue(strings.Join(v, ","))
+					logDebug("setting saml_ssovariable for %s to '%s'", m.SamlVarPrefix+strings.ToUpper(k), sanitizedValue)
+					caddyhttp.SetVar(r.Context(), m.SamlVarPrefix+strings.ToUpper(k), sanitizedValue)
 				}
 			}
 		} else {

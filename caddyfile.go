@@ -69,6 +69,14 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			if len(args) == 1 {
 				m.SamlCookieName = args[0]
 			}
+		case "saml_cookie_samesite":
+			if len(args) == 1 {
+				val := strings.ToLower(args[0])
+				if val != "strict" && val != "lax" && val != "none" {
+					return d.Err("saml_cookie_samesite must be one of: strict, lax, none")
+				}
+				m.SamlCookieSameSite = val
+			}
 		case "saml_remote_user_var":
 			if len(args) == 1 {
 				m.SamlRemoteUserVar = args[0]

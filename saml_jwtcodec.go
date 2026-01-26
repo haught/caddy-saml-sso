@@ -76,9 +76,12 @@ func (c SamlJWTSessionCodec) New(assertion *saml.Assertion) (samlsp.Session, err
 // Encode returns a serialized version of the Session.
 //
 // The provided session must be a SamlJWTSessionClaims, otherwise this
-// function will panic.
+// function will return an error.
 func (c SamlJWTSessionCodec) Encode(s samlsp.Session) (string, error) {
-	claims := s.(SamlJWTSessionClaims) // this will panic if you pass the wrong kind of session
+	claims, ok := s.(SamlJWTSessionClaims)
+	if !ok {
+		return "", fmt.Errorf("invalid session type: expected SamlJWTSessionClaims")
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	signedString, err := token.SignedString(c.Key)
 	if err != nil {

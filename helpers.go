@@ -8,7 +8,11 @@ import (
 )
 
 func (m *Middleware) extractAttributes(r *http.Request) (Attributes, error) {
-	session, _ := m.SamlSP.Session.GetSession(r)
+	session, err := m.SamlSP.Session.GetSession(r)
+	if err != nil {
+		logDebug("failed to get SAML session: %v", err)
+		return nil, nil
+	}
 	if session == nil {
 		return nil, nil
 	}
@@ -19,6 +23,12 @@ func (m *Middleware) extractAttributes(r *http.Request) (Attributes, error) {
 	}
 
 	return jwtSessionClaims.Attributes, nil
+}
+
+// sanitizeHeaderValue removes CR and LF characters from a string to prevent
+// HTTP header injection attacks.
+func sanitizeHeaderValue(s string) string {
+	return strings.NewReplacer("\r", "", "\n", "").Replace(s)
 }
 
 func logDebug(msg string, args ...any) {

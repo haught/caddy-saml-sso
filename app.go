@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -60,14 +61,28 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 		return err
 	}
 
+	// Parse SameSite setting
+	var sameSite http.SameSite
+	switch m.SamlCookieSameSite {
+	case "strict":
+		sameSite = http.SameSiteStrictMode
+	case "lax":
+		sameSite = http.SameSiteLaxMode
+	case "none":
+		sameSite = http.SameSiteNoneMode
+	default:
+		sameSite = 0 // Let SamlSessionProvider use its default (Lax)
+	}
+
 	samlSP, err := NewSaml(samlsp.Options{
-		URL:         *rootURL,
-		Key:         keyPair.PrivateKey.(*rsa.PrivateKey),
-		Certificate: keyPair.Leaf,
-		IDPMetadata: idpMetadata,
-		EntityID:    m.SamlEntityID,
-		SignRequest: true,
-		CookieName:  m.SamlCookieName,
+		URL:            *rootURL,
+		Key:            keyPair.PrivateKey.(*rsa.PrivateKey),
+		Certificate:    keyPair.Leaf,
+		IDPMetadata:    idpMetadata,
+		EntityID:       m.SamlEntityID,
+		SignRequest:    true,
+		CookieName:     m.SamlCookieName,
+		CookieSameSite: sameSite,
 	}, m.SamlClaims)
 	if err != nil {
 		return err
@@ -83,6 +98,18 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 
 // Validate implements caddy.Validator.
 func (m *Middleware) Validate() error {
+	if m.SamlIdpUrl == "" {
+		return fmt.Errorf("saml_idp_url is required")
+	}
+	if m.SamlCertFile == "" {
+		return fmt.Errorf("saml_cert_file is required")
+	}
+	if m.SamlKeyFile == "" {
+		return fmt.Errorf("saml_key_file is required")
+	}
+	if m.SamlRootUrl == "" {
+		return fmt.Errorf("saml_root_url is required")
+	}
 	return nil
 }
 
