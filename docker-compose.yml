@@ -2,23 +2,45 @@
 version: "3.1"
 
 services:
-  caddy-saml-sso:
-    container_name: caddy-saml-sso
-    image: golang:1.20
+  caddy-saml-sso-dev:
+    container_name: caddy-saml-sso-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     working_dir: /app
     volumes:
       - .:/app
+      - go-mod-cache:/go/pkg/mod
     ports:
-      - 12000:12000
+      - 12000:12000/tcp
+      - 12000:12000/udp
     env_file:
       - .env.dev
+    environment:
+      - CGO_ENABLED=0
     command: >
-      ./caddy.amd64 run
-  saml-app:
-    container_name: saml-app
-    image: golang:1.20
-    volumes:
-      - ./saml-app/go:/app
-    working_dir: /app
-    command: >
-      go run ./server-app.go
+      air -c .air.toml
+
+  # caddy-saml-sso:
+  #   container_name: caddy-saml-sso
+  #   image: golang:1.25
+  #   working_dir: /app
+  #   volumes:
+  #     - .:/app
+  #   ports:
+  #     - 12000:12000
+  #   env_file:
+  #     - .env.dev
+  #   command: >
+  #     ./caddy.amd64.linux run --config ./Caddyfile
+  # saml-app:
+  #   container_name: saml-app
+  #   image: golang:1.25
+  #   volumes:
+  #     - ./saml-app/go:/app
+  #   working_dir: /app
+  #   command: >
+  #     go run ./server-app.go
+
+volumes:
+  go-mod-cache:

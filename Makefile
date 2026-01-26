@@ -2,6 +2,7 @@ HOST=$(shell hostname)
 MOD_NAME=caddy-saml-sso
 PRJ_NAME=$(MOD_NAME)
 BINS=caddy.arm64.osx caddy.amd64.linux caddy.amd64.windows
+IMAGE=github.com/ncstate-comtech/$(MOD_NAME)
 
 VERSION=$(shell cat version.go | tail -1| awk -F\" '{print $$2}')
 
@@ -20,13 +21,13 @@ test-env:
 build-all: $(BINS)
 
 caddy.arm64.osx: xcaddy
-	xcaddy build --with github.com/drio/$(MOD_NAME) --output $@
+	xcaddy build --with github.com/ncstate-comtech/$(MOD_NAME) --output $@
 
 caddy.amd64.linux:
-	GOARCH=amd64 GOOS=linux xcaddy build --with github.com/drio/$(MOD_NAME) --output $@
+	GOARCH=amd64 GOOS=linux xcaddy build --with github.com/ncstate-comtech/$(MOD_NAME)=./ --output $@
 
 caddy.amd64.windows:
-	GOARCH=amd64 GOOS=windows xcaddy build --with github.com/drio/$(MOD_NAME) --output $@
+	GOARCH=amd64 GOOS=windows xcaddy build --with github.com/ncstate-comtech/$(MOD_NAME) --output $@
 
 xcaddy:
 	go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
@@ -65,17 +66,17 @@ docker/login:
 	echo $$CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
 
 docker/build:
-	docker build -t ghcr.io/drio/caddy-saml-sso:$(VERSION) .
+	docker build -t $(IMAGE):$(VERSION) .
 
 docker/publish: docker/build
-	docker push ghcr.io/drio/caddy-saml-sso:$(VERSION)
+	docker push $(IMAGE):$(VERSION)
 
 docker/run:
-	docker run -p 12000:12000 \
+	docker run --rm -p 12000:12000 \
 		--env-file=.env.dev \
 		-v ./saml-cert:/saml-cert \
 		-v ./Caddyfile:/etc/caddy/Caddyfile \
-		ghcr.io/drio/caddy-saml-sso:$(VERSION) \
+		$(IMAGE):$(VERSION) \
 		/usr/bin/caddy run --config=/etc/caddy/Caddyfile
 
 release:

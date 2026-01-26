@@ -44,23 +44,42 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			if len(args) == 1 {
 				m.SamlEntityID = args[0]
 			}
-		case "saml_claims":
+		case "saml_userid_claim":
 			if len(args) == 1 {
-				m.SamlClaims = strings.Split(args[0], ",")
+				m.SamlUserIdClaim = args[0]
+			}
+		case "saml_claims":
+			if len(args) > 0 {
+				// Join all arguments in case Caddy splits the comma-separated value
+				claimsStr := strings.Join(args, ",")
+				m.SamlClaims = strings.Split(claimsStr, ",")
 				for t := range m.SamlClaims {
 					m.SamlClaims[t] = strings.TrimSpace(m.SamlClaims[t])
 				}
-			}
-		case "saml_header_claims":
-			if len(args) == 1 {
-				m.SamlHeaderClaims = strings.Split(args[0], ",")
-				for t := range m.SamlHeaderClaims {
-					m.SamlHeaderClaims[t] = strings.TrimSpace(m.SamlHeaderClaims[t])
+				// Remove any empty strings after trimming
+				var filtered []string
+				for _, claim := range m.SamlClaims {
+					if claim != "" {
+						filtered = append(filtered, claim)
+					}
 				}
+				m.SamlClaims = filtered
+			}
+		case "saml_cookie_name":
+			if len(args) == 1 {
+				m.SamlCookieName = args[0]
+			}
+		case "saml_remote_user_var":
+			if len(args) == 1 {
+				m.SamlRemoteUserVar = args[0]
+			}
+		case "saml_var_prefix":
+			if len(args) == 1 {
+				m.SamlVarPrefix = args[0]
 			}
 		default:
 			//d.Err("Unknow cam parameter: " + parameter)
-			log("skipping: %s %v", parameter, args)
+			logDebug("skipping unknown parameter: %s %v", parameter, args)
 		}
 	}
 	return nil
@@ -70,5 +89,5 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
 	var m Middleware
 	err := m.UnmarshalCaddyfile(h.Dispenser)
-	return m, err
+	return &m, err
 }

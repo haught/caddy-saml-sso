@@ -1,6 +1,9 @@
 package caddy_saml_sso
 
 import (
+	"crypto/rsa"
+	"fmt"
+
 	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/crewjam/saml"
@@ -19,7 +22,7 @@ func SamlSessionCodec(opts samlsp.Options, claims []string) SamlJWTSessionCodec 
 		Audience:      opts.URL.String(),
 		Issuer:        opts.URL.String(),
 		MaxAge:        defaultSessionMaxAge,
-		Key:           opts.Key,
+		Key:           opts.Key.(*rsa.PrivateKey),
 		Claims:        claims,
 	}
 }
@@ -49,16 +52,54 @@ func SamlSessionProvider(opts samlsp.Options, claims []string) samlsp.CookieSess
 // replacing and/or changing Session, RequestTracker, and ServiceProvider
 // in the returned Middleware.
 func NewSaml(opts samlsp.Options, claims []string) (*samlsp.Middleware, error) {
-	m := &samlsp.Middleware{
-		ServiceProvider: samlsp.DefaultServiceProvider(opts),
-		Binding:         "",
-		ResponseBinding: saml.HTTPPostBinding,
-		OnError:         samlsp.DefaultOnError,
-		Session:         SamlSessionProvider(opts, claims),
+	// Validate required options
+	if opts.URL.String() == "" {
+		return nil, fmt.Errorf("URL is required")
 	}
+	if opts.Key == nil {
+		return nil, fmt.Errorf("key is required")
+	}
+	if opts.Certificate == nil {
+		return nil, fmt.Errorf("certificate is required")
+	}
+	if opts.IDPMetadata == nil {
+		return nil, fmt.Errorf("IDPMetadata is required")
+	}
+
+	sp := samlsp.DefaultServiceProvider(opts)
+	if sp.EntityID == "" {
+		return nil, fmt.Errorf("ServiceProvider EntityID is empty")
+	}
+
+	session := SamlSessionProvider(opts, claims)
+	if session.Codec == nil {
+		return nil, fmt.Errorf("session codec is nil")
+	}
+
+	m := &samlsp.Middleware{
+		ServiceProvider:  sp,
+		Binding:          "",
+		ResponseBinding:  saml.HTTPPostBinding,
+		OnError:          samlsp.DefaultOnError,
+		Session:          session,
+		AssertionHandler: samlsp.DefaultAssertionHandler(opts),
+	}
+
 	m.RequestTracker = samlsp.DefaultRequestTracker(opts, &m.ServiceProvider)
+	if m.RequestTracker == nil {
+		return nil, fmt.Errorf("RequestTracker is nil after initialization")
+	}
+
 	if opts.UseArtifactResponse {
 		m.ResponseBinding = saml.HTTPArtifactBinding
+	}
+
+	// Validate all critical fields are set
+	if m.ServiceProvider.EntityID == "" {
+		return nil, fmt.Errorf("ServiceProvider EntityID is empty")
+	}
+	if m.Session == nil {
+		return nil, fmt.Errorf("session is empty")
 	}
 
 	return m, nil

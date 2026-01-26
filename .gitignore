@@ -13,3 +13,4 @@ caddy.*
 ./scripts/*tunnel*
 Caddyfile.proxy-local
 README.local.md
+tmp/

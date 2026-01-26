@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/caddyserver/caddy/v2"
-	"github.com/crewjam/saml/samlsp"
 )
 
 func (m *Middleware) extractAttributes(r *http.Request) (Attributes, error) {
@@ -14,15 +13,26 @@ func (m *Middleware) extractAttributes(r *http.Request) (Attributes, error) {
 		return nil, nil
 	}
 
-	r = r.WithContext(samlsp.ContextWithSession(r.Context(), session))
 	jwtSessionClaims, ok := session.(SamlJWTSessionClaims)
 	if !ok {
-		return nil, fmt.Errorf("Unable to decode session into JWTSessionClaims")
+		return nil, fmt.Errorf("unable to decode session into JWTSessionClaims")
 	}
 
 	return jwtSessionClaims.Attributes, nil
 }
 
-func log(msg string, args ...interface{}) {
-	caddy.Log().Sugar().Infof(msg, args)
+func logDebug(msg string, args ...any) {
+	caddy.Log().Sugar().Debugf(msg, args...)
+}
+
+func logInfo(msg string, args ...any) {
+	caddy.Log().Sugar().Infof(msg, args...)
+}
+
+func logWarn(msg string, args ...any) {
+	caddy.Log().Sugar().Warnf(msg, args...)
+}
+
+func logError(msg string, args ...any) {
+	caddy.Log().Sugar().Errorf(msg, args...)
 }
