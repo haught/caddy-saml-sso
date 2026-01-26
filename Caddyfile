@@ -10,8 +10,11 @@
 		saml_key_file {$SAML_KEY_FILE}
 		saml_root_url {$SAML_ROOT_URL}
 		saml_entity_id {$SAML_ENTITY_ID}
+		saml_userid_claim {$SAML_USERID_CLAIM}
 		saml_claims {$SAML_CLAIMS}
-		saml_header_claims {$SAML_HEADER_CLAIMS}
+		saml_cookie_name {$SAML_COOKIE_NAME}
+		saml_remote_user_var {$SAML_REMOTE_USER_VAR}
+		saml_var_prefix {$SAML_VAR_PREFIX}
 	}
 }
 
@@ -25,6 +28,7 @@ http://:12000 {
 	# Respond back to the user printing some of the SAML attributes
 	header Content-Type text/html
 	respond `<center>
-	<p> {http.response.header.displayname} ({http.response.header.mail}), you are authenticated now.</p>
+		<p><br /> {http.request.header.x-remote-user}, you are authenticated now.<br />
+		</p>
 	</center>`
 }

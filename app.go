@@ -24,6 +24,17 @@ func (Middleware) CaddyModule() caddy.ModuleInfo {
 
 // Provision implements caddy.Provisioner.
 func (m *Middleware) Provision(ctx caddy.Context) error {
+	// Set defaults for optional fields
+	if m.SamlCookieName == "" {
+		m.SamlCookieName = "token"
+	}
+	if m.SamlRemoteUserVar == "" {
+		m.SamlRemoteUserVar = "REMOTE_USER"
+	}
+	if m.SamlVarPrefix == "" {
+		m.SamlVarPrefix = "SAML_"
+	}
+
 	keyPair, err := tls.LoadX509KeyPair(m.SamlCertFile, m.SamlKeyFile)
 	if err != nil {
 		return err
@@ -56,6 +67,7 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 		IDPMetadata: idpMetadata,
 		EntityID:    m.SamlEntityID,
 		SignRequest: true,
+		CookieName:  m.SamlCookieName,
 	}, m.SamlClaims)
 	if err != nil {
 		return err
@@ -65,7 +77,7 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 	nullHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 	m.SamlHandler = samlSP.RequireAccount(nullHandler)
 
-	log("loaded saml_sso v%s", version)
+	logDebug("loaded saml_sso v%s", version)
 	return nil
 }
 
