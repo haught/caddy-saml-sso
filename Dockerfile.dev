@@ -1,0 +1,21 @@
+FROM golang:1.25
+
+# Install air for live reloading
+RUN go install github.com/air-verse/air@latest
+
+# Install xcaddy for building Caddy with the plugin
+RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the code
+COPY . .
+
+# Default command will be overridden by docker-compose
+CMD ["air", "-c", ".air.toml"]
+
