@@ -3,6 +3,7 @@ package caddy_saml_sso
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/caddyserver/caddy/v2"
 )
