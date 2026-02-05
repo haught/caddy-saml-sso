@@ -1,7 +1,7 @@
 package caddy_saml_sso
 
 import (
-	"crypto/rsa"
+	"crypto"
 	"errors"
 	"fmt"
 	"slices"
@@ -25,7 +25,7 @@ type SamlJWTSessionCodec struct {
 	Audience      string
 	Issuer        string
 	MaxAge        time.Duration
-	Key           *rsa.PrivateKey
+	Key           crypto.Signer
 	Claims        []string
 }
 
@@ -82,7 +82,7 @@ func (c SamlJWTSessionCodec) Encode(s samlsp.Session) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("invalid session type: expected SamlJWTSessionClaims")
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(c.SigningMethod, claims)
 	signedString, err := token.SignedString(c.Key)
 	if err != nil {
 		return "", err

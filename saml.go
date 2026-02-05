@@ -1,6 +1,8 @@
 package caddy_saml_sso
 
 import (
+	"crypto"
+	"crypto/ecdsa"
 	"crypto/rsa"
 	"fmt"
 	"net/http"
@@ -11,19 +13,30 @@ import (
 	"github.com/crewjam/saml/samlsp"
 )
 
-var defaultJWTSigningMethod = jwt.SigningMethodRS256
-
 const defaultSessionCookieName = "token"
 
 // SamltSessionCodec returns the default SessionCodec for the provided options,
 // a SamlJWTSessionCodec configured to issue signed tokens.
 func SamlSessionCodec(opts samlsp.Options, claims []string) SamlJWTSessionCodec {
+	key := opts.Key.(crypto.Signer)
+
+	// Select signing method based on key type
+	var signingMethod jwt.SigningMethod
+	switch key.Public().(type) {
+	case *rsa.PublicKey:
+		signingMethod = jwt.SigningMethodRS256
+	case *ecdsa.PublicKey:
+		signingMethod = jwt.SigningMethodES256
+	default:
+		signingMethod = jwt.SigningMethodRS256 // fallback
+	}
+
 	return SamlJWTSessionCodec{
-		SigningMethod: defaultJWTSigningMethod,
+		SigningMethod: signingMethod,
 		Audience:      opts.URL.String(),
 		Issuer:        opts.URL.String(),
 		MaxAge:        defaultSessionMaxAge,
-		Key:           opts.Key.(*rsa.PrivateKey),
+		Key:           key,
 		Claims:        claims,
 	}
 }

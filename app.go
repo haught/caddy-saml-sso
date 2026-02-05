@@ -2,7 +2,7 @@ package caddy_saml_sso
 
 import (
 	"context"
-	"crypto/rsa"
+	"crypto"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -45,6 +45,12 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 		return err
 	}
 
+	// Assert that the private key implements crypto.Signer (RSA and ECDSA keys do)
+	signer, ok := keyPair.PrivateKey.(crypto.Signer)
+	if !ok {
+		return fmt.Errorf("private key does not implement crypto.Signer")
+	}
+
 	idpMetadataURL, err := url.Parse(m.SamlIdpUrl)
 	if err != nil {
 		return err
@@ -76,7 +82,7 @@ func (m *Middleware) Provision(ctx caddy.Context) error {
 
 	samlSP, err := NewSaml(samlsp.Options{
 		URL:            *rootURL,
-		Key:            keyPair.PrivateKey.(*rsa.PrivateKey),
+		Key:            signer,
 		Certificate:    keyPair.Leaf,
 		IDPMetadata:    idpMetadata,
 		EntityID:       m.SamlEntityID,
