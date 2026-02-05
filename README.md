@@ -42,11 +42,31 @@ but it is now a parked domain. You'll have to find an alternative. Please reach 
 | `saml_root_url` | Yes | Base URL of your service provider |
 | `saml_entity_id` | No | Custom Entity ID for the SP (defaults to root URL) |
 | `saml_userid_claim` | No | SAML attribute to use as the user identifier (sets `X-Remote-User` header) |
-| `saml_claims` | No | Comma-separated list of SAML claims to pass as Caddy variables |
+| `saml_claims` | No | Comma-separated list of SAML claims to pass as HTTP headers and Caddy variables |
 | `saml_cookie_name` | No | Session cookie name (default: `token`) |
 | `saml_cookie_samesite` | No | Cookie SameSite policy: `strict`, `lax`, or `none` (default: `lax`) |
 | `saml_remote_user_var` | No | Caddy variable name for the authenticated user (default: `REMOTE_USER`) |
 | `saml_var_prefix` | No | Prefix for SAML claim variables (default: `SAML_`) |
+
+## HTTP Headers and Caddy Variables
+
+After successful SAML authentication, the module sets the following:
+
+| Source | HTTP Header | Caddy Variable | PHP `$_SERVER` |
+|--------|-------------|----------------|----------------|
+| `saml_userid_claim` | `X-Remote-User` | `REMOTE_USER` (configurable) | `HTTP_X_REMOTE_USER` |
+| `saml_claims` | `X-SAML-{CLAIM}` | `SAML_{CLAIM}` (configurable prefix) | `HTTP_X_SAML_{CLAIM}` |
+
+For example, with `saml_claims email,displayName,groups`:
+
+| HTTP Header | Caddy Variable | PHP `$_SERVER` |
+|-------------|----------------|----------------|
+| `X-Remote-User` | `{vars.REMOTE_USER}` | `$_SERVER['HTTP_X_REMOTE_USER']` |
+| `X-SAML-EMAIL` | `{vars.SAML_EMAIL}` | `$_SERVER['HTTP_X_SAML_EMAIL']` |
+| `X-SAML-DISPLAYNAME` | `{vars.SAML_DISPLAYNAME}` | `$_SERVER['HTTP_X_SAML_DISPLAYNAME']` |
+| `X-SAML-GROUPS` | `{vars.SAML_GROUPS}` | `$_SERVER['HTTP_X_SAML_GROUPS']` |
+
+This works with FrankenPHP, FastCGI, reverse proxy, and any HTTP-based backend.
 
 ## Caddyfile example
 

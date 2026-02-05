@@ -63,14 +63,17 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 				if len(m.SamlUserIdClaim) > 0 && k == m.SamlUserIdClaim {
 					// Sanitize value to prevent HTTP header injection
 					sanitizedValue := sanitizeHeaderValue(v[0])
-					logDebug("setting saml_ssoremote user header to %s", sanitizedValue)
+					logDebug("setting saml_sso remote user header to %s", sanitizedValue)
 					r.Header.Set("X-Remote-User", sanitizedValue)
-					logDebug("setting saml_ssovariable for %s to '%s'", m.SamlRemoteUserVar, sanitizedValue)
+					logDebug("setting saml_sso variable for %s to '%s'", m.SamlRemoteUserVar, sanitizedValue)
 					caddyhttp.SetVar(r.Context(), m.SamlRemoteUserVar, sanitizedValue)
 				} else if slices.Contains(m.SamlClaims, k) {
 					// Sanitize joined values to prevent HTTP header injection
 					sanitizedValue := sanitizeHeaderValue(strings.Join(v, ","))
-					logDebug("setting saml_ssovariable for %s to '%s'", m.SamlVarPrefix+strings.ToUpper(k), sanitizedValue)
+					headerName := "X-SAML-" + strings.ToUpper(k)
+					logDebug("setting saml_sso header %s to '%s'", headerName, sanitizedValue)
+					r.Header.Set(headerName, sanitizedValue)
+					logDebug("setting saml_sso variable for %s to '%s'", m.SamlVarPrefix+strings.ToUpper(k), sanitizedValue)
 					caddyhttp.SetVar(r.Context(), m.SamlVarPrefix+strings.ToUpper(k), sanitizedValue)
 				}
 			}
